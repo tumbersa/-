@@ -92,13 +92,10 @@ void searchdel(Stack*& voz, int r1, int r2) {
 }
 
 
-
-
-
 void print(int*** b) {
 	for (int k = 0; k < 4; k++) {
 		for (int i = 0; i < 5; i++) {
-			for (int j = 0; j < 3 * 4; j++)
+			for (int j = 0; j < 4 * 4; j++)
 				cout << b[k][i][j] << " ";
 			cout << endl;
 		}
@@ -106,10 +103,11 @@ void print(int*** b) {
 	}
 }
 
-void print(bool a[3][4]) {
-	for (int i = 0; i < 3; i++) {
-		for (int j = 0; j < 4; j++)
+void print(bool a[4][4]) {
+	for (int i = 0; i < 4; i++) {
+		for (int j = 0; j < 4; j++) {
 			cout << a[i][j] << " ";
+		}
 		cout << endl;
 	}
 }
@@ -122,14 +120,15 @@ int main() {
 	int k1 = 0;
 	int x1 = -1, y1 = -1;//предыдущие координаты
 
-	bool a[3][4];
-	a[0][0] = 0; a[0][1] = 0; a[0][2] = 0; a[0][3] = 1;
-	a[1][0] = 0; a[1][1] = 1; a[1][2] = 1; a[1][3] = 1;
-	a[2][0] = 1; a[2][1] = 0; a[2][2] = 0; a[2][3] = 0;
+	bool a[4][4];
+	a[0][0] = 0; a[0][1] = 0; a[0][2] = 0; a[0][3] = 0;//проработать вариант с квадратом нулей и квадратом с выходом
+	a[1][0] = 1; a[1][1] = 0; a[1][2] = 1; a[1][3] = 0;
+	a[2][0] = 0; a[2][1] = 1; a[2][2] = 1; a[2][3] = 0;
+	a[3][0] = 0; a[3][1] = 0; a[3][2] = 0; a[3][3] = 0;
 
 	print(a);
 
-	int n = 3, m = 4;
+	int n = 4, m = 4;
 
 	Stack* top = new Stack;
 	init(top);
@@ -150,11 +149,12 @@ int main() {
 	bool f1 = 0;//для перехода в режим возвращения
 	bool f2 = 0;//запись соседней точки и удаление точки возврата
 	int x = 0, y = 0;
-
+	int x0 = x, y0 = y;//точка спавна
 	//______________________________________________________________________
 
 	push(top, x, y);
-
+	if (a[x][y] == 1) cout << "what" << endl;
+	else
 	while (f) {
 
 		cout << x << " " << y << "f1="<<f1 << endl;
@@ -162,54 +162,58 @@ int main() {
 
 		f2 = 0;
 
-		for (int i = 1; i < 5; i++)
+		for (int i = 1; i < 5; i++)//если не из точки возврата
 			for (int j = 0; j < n * m; j++)
 				if (x == b[2][i][j] && y == b[3][i][j]) {
-					b[0][i][j] = b[2][i][j];
-					b[1][i][j] = b[3][i][j];
-					for (int u = 1; u < 5; u++)
-						if (b[0][u][j] == -2 && b[1][u][j] == -2) f2 = 1;
-					if (f2 == 0) {
-						for (int i1 = 0; i1 < 5; i1++) {
-							searchdel(voz, b[0][i1][j], b[1][i1][j]);
-							b[0][i1][j] = -1;
-							b[1][i1][j] = -1;
+					if (x1 != b[2][0][j] || y1 != b[3][0][j]) {
+						b[0][i][j] = b[2][i][j];
+						b[1][i][j] = b[3][i][j];
+						for (int u = 1; u < 5; u++)
+							if (b[0][u][j] == -2 && b[1][u][j] == -2) f2 = 1;
+						if (f2 == 0) {
+							for (int i1 = 0; i1 < 5; i1++) {
+								searchdel(voz, b[0][i1][j], b[1][i1][j]);
+								b[0][i1][j] = -1;
+								b[1][i1][j] = -1;
+							}
 						}
+						f2 = 0;//чтобы удалились другие точки
+						if (isEmpty(voz)) f1 = 1;
 					}
-					f2 = 1;//чтобы не удалились другие точки
 				}
-
+		cout << " f2=" << f2 << endl;
 
 		if (f1) {
-			y2 = pop(voz);
-			x2 = pop(voz);
-			x = x2;
-			y = y2;
-			if (!isEmpty(voz)) if (voz->info == -1) pop(voz);
-			y3 = pop(top);
-			x3 = pop(top);
-			Stack* temp1 = new Stack;//туда
-			init(temp1);
-			Stack* temp2 = new Stack;//обратно
-			init(temp2);
-			push(temp1, y3, x3);
-			while (x3 != x2 || y3 != y2) {
+			if (!isEmpty(voz)) {
+				y2 = pop(voz);
+				x2 = pop(voz);
+				x = x2;
+				y = y2;
 				y3 = pop(top);
 				x3 = pop(top);
+				Stack* temp1 = new Stack;//туда
+				init(temp1);
+				Stack* temp2 = new Stack;//обратно
+				init(temp2);
 				push(temp1, y3, x3);
-				push(temp2, x3, y3);
-				k1++;
+				while (x3 != x2 || y3 != y2) {
+					y3 = pop(top);
+					x3 = pop(top);
+					push(temp1, y3, x3);
+					push(temp2, x3, y3);
+					k1++;
+				}
+				cout << endl;
+				rev(temp2);
+				while (temp1) {
+					push(top, pop(temp1));
+				}
+				while (temp2) {
+					push(top, pop(temp2));
+				}
+				f1 = 0;
 			}
-			cout << endl;
-			rev(temp2);
-			while (temp1) {
-				push(top, pop(temp1));
-			}
-			while (temp2) {
-				push(top, pop(temp2));
-			}
-			f1 = 0;
-			
+			else f = 0;
 		}
 		else {
 			//////
@@ -253,11 +257,13 @@ int main() {
 				else	
 				if (a[x][y + 1] == 0 && a[x + 1][y] == 0) {
 					k1++;
-					if (x1 == -1 && y1 == -1) {
+					if (x==x0 && y==y0) {
 						bool f4 = 0;
-						int t;
+						int t=0;
 						for (t = 0; t < n * m && !f4; t++)
-							if (b[0][0][t] == x && b[1][0][t] == y) f4 = 1;
+							if (b[0][0][t] == x && b[1][0][t] == y) 
+								f4 = 1;
+						t--;
 						if (!f4) {
 							int j = n * m - 1;
 							bool f3 = 1;
@@ -274,15 +280,14 @@ int main() {
 							b[0][2][j] = -2; b[2][2][j] = x + 1;
 							b[1][2][j] = -2; b[3][2][j] = y;
 
-							if (!isEmpty(voz)) push(voz, -1);
 							push(voz, x, y);
-
 							push(top, x, y + 1);
 							y += 1;
 
 						}
 						else
 						{
+							cout << "t=" << t << endl;
 							for (int t1 = 0; t1 < 5; t1++) {
 								b[0][t1][t] = -1;
 								b[1][t1][t] = -1;
@@ -296,6 +301,7 @@ int main() {
 							push(top, x + 1, y);
 							x += 1;
 						}
+						else
 						if (x1 == 1 && y1 == 0) {
 							push(top, x, y+1);
 							y += 1;
@@ -345,11 +351,13 @@ int main() {
 				else
 				if (a[x][y - 1] == 0 && a[x + 1][y] == 0) {
 					k1++;
-					if (x1 == -1 && y1 == -1) {
+					if (x == x0 && y == y0){
 						bool f4 = 0;
-						int t;
+						int t=0;
 						for (t = 0; t < n * m && !f4; t++)
-							if (b[0][0][t] == x && b[1][0][t] == y) f4 = 1;
+							if (b[0][0][t] == x && b[1][0][t] == y) 
+								f4 = 1;
+						t--;
 						if (!f4) {
 							int j = n * m - 1;
 							bool f3 = 1;
@@ -366,12 +374,9 @@ int main() {
 							b[0][2][j] = -2; b[2][2][j] = x + 1;
 							b[1][2][j] = -2; b[3][2][j] = y;
 
-							if (!isEmpty(voz)) push(voz, -1);
 							push(voz, x, y);
-
 							push(top, x, y - 1);
 							y -= 1;
-
 						}
 						else
 						{
@@ -388,6 +393,7 @@ int main() {
 							push(top, x + 1, y);
 							x += 1;
 						}
+						else
 						if (x1 == 1 && y1 == n-1) {
 							push(top, x, y - 1);
 							y -= 1;
@@ -448,19 +454,20 @@ int main() {
 					}
 				}
 				else
-				if (a[x][y + 1] == 0 && a[x + 1][y] == 0 || a[x][y + 1] == 0 && a[x][y - 1] == 0 || a[x][y - 1] == 0 && a[x + 1][y] == 0) {
+				if (a[x][y + 1] == 0 && a[x + 1][y] == 0  && a[x][y - 1] == 0 ) {
 					k1++;
-					if (x1 == -1 && y1 == -1) {
-						bool f4 = 0;
-						int t;
-						for (t = 0; t < n * m && !f4; t++)
-							if (b[0][0][t] == x && b[1][0][t] == y) f4 = 1;
-						int j = n * m - 1;
-						bool f3 = 1;
-						while (f3 && j != 0) {
-							if (b[0][0][j] != -1) { f3 = 0; j++; }
-							else j--;
-						}
+					bool f4 = 0;
+					int t = 0;
+					for (t = 0; t < n * m && !f4; t++)
+						if (b[0][0][t] == x && b[1][0][t] == y) f4 = 1;
+					t--;
+					int j = n * m - 1;
+					bool f3 = 1;
+					while (f3 && j != 0) {
+						if (b[0][0][j] != -1) { f3 = 0; j++; }
+						else j--;
+					}
+					if (x == x0 && y == y0){
 						if (!f4) {
 
 							b[0][0][j] = x; b[2][0][j] = x;
@@ -475,12 +482,9 @@ int main() {
 							b[0][3][j] = -2; b[2][3][j] = x;
 							b[1][3][j] = -2; b[3][3][j] = y - 1;
 
-							if (!isEmpty(voz)) push(voz, -1);
 							push(voz, x, y);
-
 							push(top, x, y + 1);
 							y += 1;
-
 						}
 						else
 						{
@@ -499,7 +503,6 @@ int main() {
 								y -= 1;
 							}
 							else {
-								if (!isEmpty(voz)) push(voz, -1);
 								push(voz, x, y);
 								push(top, x + 1, y);
 								b[0][2][j] = x + 1;
@@ -509,9 +512,250 @@ int main() {
 						}
 					}
 					else {
+
+						if (x1 == x  && y1 == y-1) {
+							if (!f4) {
+								b[0][0][j] = x; b[2][0][j] = x;
+								b[1][0][j] = y; b[3][0][j] = y;
+
+								b[0][1][j] = x; b[2][1][j] = x;
+								b[1][1][j] = y - 1; b[3][1][j] = y - 1;
+
+								b[0][2][j] = x + 1; b[2][2][j] = x + 1;
+								b[1][2][j] = y; b[3][2][j] = y;
+
+								b[0][3][j] = -2; b[2][3][j] = x;
+								b[1][3][j] = -2; b[3][3][j] = y + 1;
+								push(voz, x, y);
+
+								push(top, x+1, y);
+								x += 1;
+							}
+							else {
+								for (int t1 = 0; t1 < 5; t1++) {
+									b[0][t1][t] = -1;
+									b[1][t1][t] = -1;
+								}
+								push(top, x, y + 1);
+								y += 1;
+							}
+						}
+						else
+						if (x1 == x + 1 && y1 == y) {
+							if (!f4) {
+								b[0][0][j] = x; b[2][0][j] = x;
+								b[1][0][j] = y; b[3][0][j] = y;
+
+								b[0][1][j] = x+1; b[2][1][j] = x+1;
+								b[1][1][j] = y; b[3][1][j] = y;
+
+								b[0][2][j] = x; b[2][2][j] = x;
+								b[1][2][j] = y-1; b[3][2][j] = y-1;
+
+								b[0][3][j] = -2; b[2][3][j] = x;
+								b[1][3][j] = -2; b[3][3][j] = y + 1;
+								push(voz, x, y);
+
+								push(top, x, y-1);
+								y -= 1;
+							}
+							else {
+								for (int t1 = 0; t1 < 5; t1++) {
+									b[0][t1][t] = -1;
+									b[1][t1][t] = -1;
+								}
+								push(top, x, y + 1);
+								y += 1;
+							}
+						}
+						else
+						if (x1 == x && y1 == y + 1) {
+							if (!f4) {
+								b[0][0][j] = x; b[2][0][j] = x;
+								b[1][0][j] = y; b[3][0][j] = y;
+
+								b[0][1][j] = x; b[2][1][j] = x;
+								b[1][1][j] = y+1; b[3][1][j] = y+1;
+
+								b[0][2][j] = x; b[2][2][j] = x;
+								b[1][2][j] = y - 1; b[3][2][j] = y - 1;
+
+								b[0][3][j] = -2; b[2][3][j] = x+1;
+								b[1][3][j] = -2; b[3][3][j] = y;
+								push(voz, x, y);
+
+								push(top, x, y - 1);
+								y -= 1;
+							}
+							else {
+								for (int t1 = 0; t1 < 5; t1++) {
+									b[0][t1][t] = -1;
+									b[1][t1][t] = -1;
+								}
+								push(top, x+1, y);
+								x += 1;
+							}
+						}
+					}
+				}
+				if (a[x][y + 1] == 0 && a[x + 1][y] == 0 && a[x][y - 1] != 0) {
+				k1++;
+					if (x == x0 && y == y0) {
+						bool f4 = 0;
+						int t=0;
+						for (t = 0; t < n * m && !f4; t++)
+							if (b[0][0][t] == x && b[1][0][t] == y) 
+								f4 = 1;
+						t--;
+						if (!f4) {
+							int j = n * m - 1;
+							bool f3 = 1;
+							while (f3 && j != 0) {
+								if (b[0][0][j] != -1) { f3 = 0; j++; }
+								else j--;
+							}
+							b[0][0][j] = x; b[2][0][j] = x;
+							b[1][0][j] = y; b[3][0][j] = y;
+
+							b[0][1][j] = x; b[2][1][j] = x;
+							b[1][1][j] = y + 1; b[3][1][j] = y + 1;
+
+							b[0][2][j] = -2; b[2][2][j] = x + 1;
+							b[1][2][j] = -2; b[3][2][j] = y;
+
+							push(voz, x, y);
+							push(top, x, y + 1);
+							y += 1;
+						}
+						else
+						{
+							cout << "t=" << t << endl;
+							for (int t1 = 0; t1 < 5; t1++) {
+								b[0][t1][t] = -1;
+								b[1][t1][t] = -1;
+							}
+							push(top, x + 1, y);
+							x += 1;
+						}
+					}
+					else {
+						if (x1 == x && y1 == y+1) {
+							push(top, x + 1, y);
+							x += 1;
+						}
+						else
+						if (x1 == x+1 && y1 == y) {
+							push(top, x, y+1);
+							y += 1;
+						}
 					}
 
 				}
+				if (a[x][y + 1] != 0 && a[x + 1][y] == 0 && a[x][y - 1] == 0) {
+					k1++;
+					if (x == x0 && y == y0) {
+						bool f4 = 0;
+						int t = 0;
+						for (t = 0; t < n * m && !f4; t++)
+							if (b[0][0][t] == x && b[1][0][t] == y)
+								f4 = 1;
+						t--;
+						if (!f4) {
+							int j = n * m - 1;
+							bool f3 = 1;
+							while (f3 && j != 0) {
+								if (b[0][0][j] != -1) { f3 = 0; j++; }
+								else j--;
+							}
+							b[0][0][j] = x; b[2][0][j] = x;
+							b[1][0][j] = y; b[3][0][j] = y;
+
+							b[0][1][j] = x+1; b[2][1][j] = x+1;
+							b[1][1][j] = y; b[3][1][j] = y;
+
+							b[0][2][j] = -2; b[2][2][j] = x;
+							b[1][2][j] = -2; b[3][2][j] = y-1;
+
+							push(voz, x, y);
+							push(top, x+1, y);
+							x += 1;
+						}
+						else
+						{
+							cout << "t=" << t << endl;
+							for (int t1 = 0; t1 < 5; t1++) {
+								b[0][t1][t] = -1;
+								b[1][t1][t] = -1;
+							}
+							push(top, x, y-1);
+							y -= 1;
+						}
+					}
+					else {
+						if (x1 == x+1 && y1 == y) {
+							push(top, x, y-1);
+							y -= 1;
+						}
+						else
+							if (x1 == x && y1 == y-1) {
+								push(top, x+1, y);
+								x += 1;
+							}
+					}
+				}
+				if (a[x][y + 1] == 0 && a[x + 1][y] != 0 && a[x][y - 1] == 0) {
+					k1++;
+					if (x == x0 && y == y0) {
+						bool f4 = 0;
+						int t = 0;
+						for (t = 0; t < n * m && !f4; t++)
+							if (b[0][0][t] == x && b[1][0][t] == y)
+								f4 = 1;
+						t--;
+						if (!f4) {
+							int j = n * m - 1;
+							bool f3 = 1;
+							while (f3 && j != 0) {
+								if (b[0][0][j] != -1) { f3 = 0; j++; }
+								else j--;
+							}
+							b[0][0][j] = x; b[2][0][j] = x;
+							b[1][0][j] = y; b[3][0][j] = y;
+
+							b[0][1][j] = x; b[2][1][j] = x;
+							b[1][1][j] = y+1; b[3][1][j] = y+1;
+
+							b[0][2][j] = -2; b[2][2][j] = x;
+							b[1][2][j] = -2; b[3][2][j] = y - 1;
+
+							push(voz, x, y);
+							push(top, x, y+1);
+							y += 1;
+						}
+						else
+						{
+							cout << "t=" << t << endl;
+							for (int t1 = 0; t1 < 5; t1++) {
+								b[0][t1][t] = -1;
+								b[1][t1][t] = -1;
+							}
+							push(top, x, y - 1);
+							y -= 1;
+						}
+					}
+					else {
+						if (x1 == x && y1 == y+1) {
+							push(top, x, y - 1);
+							y -= 1;
+						}
+						else
+							if (x1 == x && y1 == y - 1) {
+								push(top, x, y+1);
+								y += 1;
+							}
+					}
+				}
+
 			}
 			else
 			/*
@@ -568,19 +812,19 @@ int main() {
 					}
 				}
 				else
-				if (a[x][y + 1] == 0 && a[x + 1][y] == 0 || a[x][y + 1] == 0 && a[x - 1][y] == 0 || a[x + 1][y] == 0 && a[x - 1][y] == 0) {
+				if (a[x][y + 1] == 0 && a[x + 1][y] == 0  && a[x - 1][y] == 0) {
 					k1++;
-					if (x1 == -1 && y1 == -1) {
-						bool f4 = 0;
-						int t;
-						for (t = 0; t < n * m && !f4; t++)
-							if (b[0][0][t] == x && b[1][0][t] == y) f4 = 1;
-						int j = n * m - 1;
-						bool f3 = 1;
-						while (f3 && j != 0) {
-							if (b[0][0][j] != -1) { f3 = 0; j++; }
-							else j--;
-						}
+					bool f4 = 0;
+					int t;
+					for (t = 0; t < n * m && !f4; t++)
+						if (b[0][0][t] == x && b[1][0][t] == y) f4 = 1;
+					int j = n * m - 1;
+					bool f3 = 1;
+					while (f3 && j != 0) {
+						if (b[0][0][j] != -1) { f3 = 0; j++; }
+						else j--;
+					}
+					if (x == x0 && y == y0) {
 						if (!f4) {
 
 							b[0][0][j] = x; b[2][0][j] = x;
@@ -595,7 +839,6 @@ int main() {
 							b[0][3][j] = -2; b[2][3][j] = x - 1;
 							b[1][3][j] = -2; b[3][3][j] = y;
 
-							if (!isEmpty(voz)) push(voz, -1);
 							push(voz, x, y);
 
 							push(top, x, y + 1);
@@ -619,7 +862,6 @@ int main() {
 								x -= 1;
 							}
 							else {
-								if (!isEmpty(voz)) push(voz, -1);
 								push(voz, x, y);
 								push(top, x + 1, y);						
 								b[0][2][j] = x + 1;
@@ -629,7 +871,248 @@ int main() {
 						}
 					}
 					else {
-					
+						if (x1 == x && y1 == y + 1) {
+							if (!f4) {
+								b[0][0][j] = x; b[2][0][j] = x;
+								b[1][0][j] = y; b[3][0][j] = y;
+
+								b[0][1][j] = x; b[2][1][j] = x;
+								b[1][1][j] = y + 1; b[3][1][j] = y + 1;
+
+								b[0][2][j] = x-1; b[2][2][j] = x-1;
+								b[1][2][j] = y; b[3][2][j] = y;
+
+								b[0][3][j] = -2; b[2][3][j] = x + 1;
+								b[1][3][j] = -2; b[3][3][j] = y;
+
+								push(voz, x, y);
+								push(top, x-1, y);
+								x -= 1;
+							}
+							else {
+								for (int t1 = 0; t1 < 5; t1++) {
+									b[0][t1][t] = -1;
+									b[1][t1][t] = -1;
+								}
+								push(top, x + 1, y);
+								x += 1;
+							}
+						}
+						else
+						if (x1 == x - 1 && y1 == y) {
+							if (!f4) {
+								b[0][0][j] = x; b[2][0][j] = x;
+								b[1][0][j] = y; b[3][0][j] = y;
+
+								b[0][1][j] = x-1; b[2][1][j] = x-1;
+								b[1][1][j] = y; b[3][1][j] = y;
+
+								b[0][2][j] = x; b[2][2][j] = x;
+								b[1][2][j] = y+1; b[3][2][j] = y+1;
+
+								b[0][3][j] = -2; b[2][3][j] = x + 1;
+								b[1][3][j] = -2; b[3][3][j] = y;
+
+								push(voz, x, y);
+								push(top, x, y+1);
+								y += 1;
+							}
+							else {
+								for (int t1 = 0; t1 < 5; t1++) {
+									b[0][t1][t] = -1;
+									b[1][t1][t] = -1;
+								}
+								push(top, x + 1, y);
+								x += 1;
+							}
+						}
+						else
+						if (x1 == x + 1 && y1 == y) {
+							if (!f4) {
+								b[0][0][j] = x; b[2][0][j] = x;
+								b[1][0][j] = y; b[3][0][j] = y;
+
+								b[0][1][j] = x + 1; b[2][1][j] = x + 1;
+								b[1][1][j] = y; b[3][1][j] = y;
+
+								b[0][2][j] = x; b[2][2][j] = x;
+								b[1][2][j] = y + 1; b[3][2][j] = y + 1;
+
+								b[0][3][j] = -2; b[2][3][j] = x - 1;
+								b[1][3][j] = -2; b[3][3][j] = y;
+
+								push(voz, x, y);
+								push(top, x, y + 1);
+								y += 1;
+							}
+							else {
+								for (int t1 = 0; t1 < 5; t1++) {
+									b[0][t1][t] = -1;
+									b[1][t1][t] = -1;
+								}
+								push(top, x - 1, y);
+								x -= 1;
+							}
+						}
+					}
+				}
+				else
+					if (a[x][y + 1] == 0 && a[x + 1][y] == 0 && a[x - 1][y] != 0) {
+						k1++;
+						if (x == x0 && y == y0) {
+							bool f4 = 0;
+							int t = 0;
+							for (t = 0; t < n * m && !f4; t++)
+								if (b[0][0][t] == x && b[1][0][t] == y)
+									f4 = 1;
+							t--;
+							if (!f4) {
+								int j = n * m - 1;
+								bool f3 = 1;
+								while (f3 && j != 0) {
+									if (b[0][0][j] != -1) { f3 = 0; j++; }
+									else j--;
+								}
+								b[0][0][j] = x; b[2][0][j] = x;
+								b[1][0][j] = y; b[3][0][j] = y;
+
+								b[0][1][j] = x; b[2][1][j] = x;
+								b[1][1][j] = y + 1; b[3][1][j] = y + 1;
+
+								b[0][2][j] = -2; b[2][2][j] = x + 1;
+								b[1][2][j] = -2; b[3][2][j] = y;
+
+								push(voz, x, y);
+								push(top, x, y + 1);
+								y += 1;
+							}
+							else
+							{
+								cout << "t=" << t << endl;
+								for (int t1 = 0; t1 < 5; t1++) {
+									b[0][t1][t] = -1;
+									b[1][t1][t] = -1;
+								}
+								push(top, x + 1, y);
+								x += 1;
+							}
+						}
+						else {
+							if (x1 == x && y1 == y + 1) {
+								push(top, x + 1, y);
+								x += 1;
+							}
+							else
+								if (x1 == x + 1 && y1 == y) {
+									push(top, x, y + 1);
+									y += 1;
+								}
+						}
+					}
+				else
+				if (a[x][y + 1] != 0 && a[x + 1][y] == 0 && a[x - 1][y] == 0) {
+					k1++;
+					if (x == x0 && y == y0) {
+						bool f4 = 0;
+						int t = 0;
+						for (t = 0; t < n * m && !f4; t++)
+							if (b[0][0][t] == x && b[1][0][t] == y)
+								f4 = 1;
+						t--;
+						if (!f4) {
+							int j = n * m - 1;
+							bool f3 = 1;
+							while (f3 && j != 0) {
+								if (b[0][0][j] != -1) { f3 = 0; j++; }
+								else j--;
+							}
+							b[0][0][j] = x; b[2][0][j] = x;
+							b[1][0][j] = y; b[3][0][j] = y;
+
+							b[0][1][j] = x+1; b[2][1][j] =x+1;
+							b[1][1][j] = y; b[3][1][j] = y;
+
+							b[0][2][j] = -2; b[2][2][j] = x - 1;
+							b[1][2][j] = -2; b[3][2][j] = y;
+
+							push(voz, x, y);
+							push(top, x+1, y);
+							x += 1;
+						}
+						else
+						{
+							cout << "t=" << t << endl;
+							for (int t1 = 0; t1 < 5; t1++) {
+								b[0][t1][t] = -1;
+								b[1][t1][t] = -1;
+							}
+							push(top, x - 1, y);
+							x -= 1;
+						}
+					}
+					else {
+						if (x1 == x+1 && y1 == y) {
+							push(top, x - 1, y);
+							x -= 1;
+						}
+						else
+							if (x1 == x - 1 && y1 == y) {
+								push(top, x+1, y);
+								x += 1;
+							}
+					}
+				}
+				else
+				if (a[x][y + 1] == 0 && a[x + 1][y] != 0 && a[x - 1][y] == 0) {
+					k1++;
+					if (x == x0 && y == y0) {
+						bool f4 = 0;
+						int t = 0;
+						for (t = 0; t < n * m && !f4; t++)
+							if (b[0][0][t] == x && b[1][0][t] == y)
+								f4 = 1;
+						t--;
+						if (!f4) {
+							int j = n * m - 1;
+							bool f3 = 1;
+							while (f3 && j != 0) {
+								if (b[0][0][j] != -1) { f3 = 0; j++; }
+								else j--;
+							}
+							b[0][0][j] = x; b[2][0][j] = x;
+							b[1][0][j] = y; b[3][0][j] = y;
+
+							b[0][1][j] = x; b[2][1][j] = x;
+							b[1][1][j] = y+1; b[3][1][j] = y+1;
+
+							b[0][2][j] = -2; b[2][2][j] = x - 1;
+							b[1][2][j] = -2; b[3][2][j] = y;
+
+							push(voz, x, y);
+							push(top, x, y+1);
+							y += 1;
+						}
+						else
+						{
+							cout << "t=" << t << endl;
+							for (int t1 = 0; t1 < 5; t1++) {
+								b[0][t1][t] = -1;
+								b[1][t1][t] = -1;
+							}
+							push(top, x - 1, y);
+							x -= 1;
+						}
+					}
+					else {
+						if (x1 == x && y1 == y+1) {
+							push(top, x - 1, y);
+							x -= 1;
+						}
+						else
+							if (x1 == x - 1 && y1 == y) {
+								push(top, x, y+1);
+								y += 1;
+							}
 					}
 				}
 			}
@@ -677,11 +1160,12 @@ int main() {
 				else
 				if (a[x][y - 1] == 0 && a[x - 1][y] == 0) {
 					k1++;
-					if (x1 == -1 && y1 == -1) {
+					if (x == x0 && y == y0){
 						bool f4 = 0;
-						int t;
+						int t=0;
 						for (t = 0; t < n * m && !f4; t++)
 							if (b[0][0][t] == x && b[1][0][t] == y) f4 = 1;
+						t--;
 						if (!f4) {
 							int j = n * m - 1;
 							bool f3 = 1;
@@ -698,12 +1182,9 @@ int main() {
 							b[0][2][j] = -2; b[2][2][j] = x - 1;
 							b[1][2][j] = -2; b[3][2][j] = y;
 
-							if (!isEmpty(voz)) push(voz, -1);
 							push(voz, x, y);
-
 							push(top, x, y - 1);
-							y -= 1;
-
+							y -= 1;	
 						}
 						else
 						{
@@ -720,6 +1201,7 @@ int main() {
 							push(top, x - 1, y);
 							x -= 1;
 						}
+						else
 						if (x1 == m-2 && y1 == n - 1) {
 							push(top, x, y - 1);
 							y -= 1;
@@ -767,58 +1249,58 @@ int main() {
 						}
 					}
 					else
-					if (a[x][y + 1] == 0 && a[x - 1][y] == 0) {
-						k1++;
-						if (x1 == -1 && y1 == -1) {
-							bool f4 = 0;
-							int t;
-							for (t = 0; t < n * m && !f4; t++)
-								if (b[0][0][t] == x && b[1][0][t] == y) f4 = 1;
-							if (!f4) {
-								int j = n * m - 1;
-								bool f3 = 1;
-								while (f3 && j != 0) {
-									if (b[0][0][j] != -1) { f3 = 0; j++; }
-									else j--;
+						if (a[x][y + 1] == 0 && a[x - 1][y] == 0) {
+							k1++;
+								if (x == x0 && y == y0) {
+									bool f4 = 0;
+									int t = 0;
+									for (t = 0; t < n * m && !f4; t++)
+										if (b[0][0][t] == x && b[1][0][t] == y) f4 = 1;
+									t--;						
+									if (!f4) {
+										int j = n * m - 1;
+										bool f3 = 1;
+										while (f3 && j != 0) {
+											if (b[0][0][j] != -1) { f3 = 0; j++; }
+											else j--;
+										}
+										b[0][0][j] = x; b[2][0][j] = x;
+										b[1][0][j] = y; b[3][0][j] = y;
+
+										b[0][1][j] = x; b[2][1][j] = x;
+										b[1][1][j] = y + 1; b[3][1][j] = y + 1;
+
+										b[0][2][j] = -2; b[2][2][j] = x - 1;
+										b[1][2][j] = -2; b[3][2][j] = y;
+
+										push(voz, x, y);
+										push(top, x, y + 1);
+										y += 1;
+									}
+									else
+									{
+										for (int t1 = 0; t1 < 5; t1++) {
+											b[0][t1][t] = -1;
+											b[1][t1][t] = -1;
+										}
+										push(top, x - 1, y);
+										x -= 1;
+									}
 								}
-								b[0][0][j] = x; b[2][0][j] = x;
-								b[1][0][j] = y; b[3][0][j] = y;
-
-								b[0][1][j] = x; b[2][1][j] = x;
-								b[1][1][j] = y + 1; b[3][1][j] = y + 1;
-
-								b[0][2][j] = -2; b[2][2][j] = x - 1;
-								b[1][2][j] = -2; b[3][2][j] = y;
-
-								if (!isEmpty(voz)) push(voz, -1);
-								push(voz, x, y);
-
-								push(top, x, y + 1);
-								y += 1;
-
-							}
-							else
-							{
-								for (int t1 = 0; t1 < 5; t1++) {
-									b[0][t1][t] = -1;
-									b[1][t1][t] = -1;
+								else {
+									if (x1 == m - 1 && y1 == 1) {
+										push(top, x - 1, y);
+										x -= 1;
+									}
+									else
+										if (x1 == m - 2 && y1 == 0) {
+											push(top, x, y + 1);
+											y += 1;
+										}
 								}
-								push(top, x - 1, y);
-								x -= 1;
 							}
 						}
-						else {
-							if (x1 == m - 1 && y1 == 1) {
-								push(top, x - 1, y);
-								x -= 1;
-							}
-							if (x1 == m - 2 && y1 == 0) {
-								push(top, x, y + 1);
-								y += 1;
-							}
-						}
-					}
-				}
+				
 			else
 				/*
 					^
@@ -872,20 +1354,20 @@ int main() {
 						f1 = 1;
 					}
 				}
-				else//при трёх открытых путях, проработать два открытых и приход со стороны
-				if (a[x][y + 1] == 0 && a[x - 1][y] == 0 || a[x - 1][y] == 0 && a[x][y - 1] == 0 || a[x][y + 1] == 0 && a[x][y - 1] == 0) {
+				else
+				if (a[x][y + 1] == 0 && a[x - 1][y] == 0 && a[x][y - 1] == 0) {
 					k1++;
-					if (x1 == -1 && y1 == -1) {
-						bool f4 = 0;
-						int t;
-						for (t = 0; t < n * m && !f4; t++)
-							if (b[0][0][t] == x && b[1][0][t] == y) f4 = 1;
-						int j = n * m - 1;
-						bool f3 = 1;
-						while (f3 && j != 0) {
-							if (b[0][0][j] != -1) { f3 = 0; j++; }
-							else j--;
-						}
+					bool f4 = 0;
+					int t;
+					for (t = 0; t < n * m && !f4; t++)
+						if (b[0][0][t] == x && b[1][0][t] == y) f4 = 1;
+					int j = n * m - 1;
+					bool f3 = 1;
+					while (f3 && j != 0) {
+						if (b[0][0][j] != -1) { f3 = 0; j++; }
+						else j--;
+					}
+					if (x == x0 && y == y0){
 						if (!f4) {
 
 							b[0][0][j] = x; b[2][0][j] = x;
@@ -900,9 +1382,7 @@ int main() {
 							b[0][3][j] = -2; b[2][3][j] = x;
 							b[1][3][j] = -2; b[3][3][j] = y-1;
 
-							if (!isEmpty(voz)) push(voz, -1);
 							push(voz, x, y);
-
 							push(top, x, y + 1);
 							y += 1;
 
@@ -924,7 +1404,6 @@ int main() {
 								y -= 1;
 							}
 							else {
-								if (!isEmpty(voz)) push(voz, -1);
 								push(voz, x, y);
 								push(top, x - 1, y);								
 								b[0][2][j] = x - 1;
@@ -934,13 +1413,1693 @@ int main() {
 						}
 					}
 					else {
+						if (x1 == x && y1 == y + 1) {
+							if (!f4) {
+								b[0][0][j] = x; b[2][0][j] = x;
+								b[1][0][j] = y; b[3][0][j] = y;
 
-					}
+								b[0][1][j] = x; b[2][1][j] = x;
+								b[1][1][j] = y + 1; b[3][1][j] = y + 1;
+
+								b[0][2][j] = x - 1; b[2][2][j] = x - 1;
+								b[1][2][j] = y; b[3][2][j] = y;
+
+								b[0][3][j] = -2; b[2][3][j] = x;
+								b[1][3][j] = -2; b[3][3][j] = y-1;
+
+								push(voz, x, y);
+								push(top, x - 1, y);
+								x -= 1;
+							}
+							else {
+								for (int t1 = 0; t1 < 5; t1++) {
+									b[0][t1][t] = -1;
+									b[1][t1][t] = -1;
+								}
+								push(top, x, y-1);
+								y -= 1;
+							}
+						}
+						else
+						if (x1==x-1 && y1==y) {
+							if (!f4) {
+								b[0][0][j] = x; b[2][0][j] = x;
+								b[1][0][j] = y; b[3][0][j] = y;
+
+								b[0][1][j] = x - 1; b[2][1][j] = x - 1;
+								b[1][1][j] = y; b[3][1][j] = y;
+
+								b[0][2][j] = x; b[2][2][j] = x;
+								b[1][2][j] = y + 1; b[3][2][j] = y + 1;
+
+								b[0][3][j] = -2; b[2][3][j] = x;
+								b[1][3][j] = -2; b[3][3][j] = y-1;
+								push(voz, x, y);
+								push(top, x, y + 1);
+								y += 1;
+							}
+							else {
+								for (int t1 = 0; t1 < 5; t1++) {
+									b[0][t1][t] = -1;
+									b[1][t1][t] = -1;
+								}
+								push(top, x, y-1);
+								y -= 1;
+							}
+						}
+						else
+						if (x1==x && y1 == y-1) {
+							if (!f4) {
+								b[0][0][j] = x; b[2][0][j] = x;
+								b[1][0][j] = y; b[3][0][j] = y;
+
+								b[0][1][j] = x; b[2][1][j] = x;
+								b[1][1][j] = y-1; b[3][1][j] = y-1;
+
+								b[0][2][j] = x; b[2][2][j] = x;
+								b[1][2][j] = y + 1; b[3][2][j] = y + 1;
+
+								b[0][3][j] = -2; b[2][3][j] = x-1;
+								b[1][3][j] = -2; b[3][3][j] = y;
+								push(voz, x, y);
+								push(top, x, y + 1);
+								y += 1;
+							}
+							else {
+								for (int t1 = 0; t1 < 5; t1++) {
+									b[0][t1][t] = -1;
+									b[1][t1][t] = -1;
+								}
+								push(top, x - 1, y);
+								x -= 1;
+							}
+						}
 				}
 			}
+			else
+			if (a[x][y + 1] == 0 && a[x - 1][y] == 0 && a[x][y - 1] != 0) {
+				k1++;
+				if (x == x0 && y == y0) {
+					bool f4 = 0;
+					int t = 0;
+					for (t = 0; t < n * m && !f4; t++)
+						if (b[0][0][t] == x && b[1][0][t] == y)
+							f4 = 1;
+					t--;
+					if (!f4) {
+						int j = n * m - 1;
+						bool f3 = 1;
+						while (f3 && j != 0) {
+							if (b[0][0][j] != -1) { f3 = 0; j++; }
+							else j--;
+						}
+						b[0][0][j] = x; b[2][0][j] = x;
+						b[1][0][j] = y; b[3][0][j] = y;
 
+						b[0][1][j] = x; b[2][1][j] = x;
+						b[1][1][j] = y+1; b[3][1][j] = y+1;
 
+						b[0][2][j] = -2; b[2][2][j] = x - 1;
+						b[1][2][j] = -2; b[3][2][j] = y;
 
+						push(voz, x, y);
+						push(top, x, y+1);
+						y += 1;
+					}
+					else
+					{
+						cout << "t=" << t << endl;
+						for (int t1 = 0; t1 < 5; t1++) {
+							b[0][t1][t] = -1;
+							b[1][t1][t] = -1;
+						}
+						push(top, x - 1, y);
+						x -= 1;
+					}
+				}
+				else {
+					if (x1 == x && y1 == y+1) {
+						push(top, x - 1, y);
+						x -= 1;
+					}
+					else
+						if (x1 == x - 1 && y1 == y) {
+							push(top, x, y+1);
+							y += 1;
+						}
+				}
+			}
+			else
+			if (a[x][y + 1] != 0 && a[x - 1][y] == 0 && a[x][y - 1] == 0) {
+				k1++;
+				if (x == x0 && y == y0) {
+					bool f4 = 0;
+					int t = 0;
+					for (t = 0; t < n * m && !f4; t++)
+						if (b[0][0][t] == x && b[1][0][t] == y)
+							f4 = 1;
+					t--;
+					if (!f4) {
+						int j = n * m - 1;
+						bool f3 = 1;
+						while (f3 && j != 0) {
+							if (b[0][0][j] != -1) { f3 = 0; j++; }
+							else j--;
+						}
+						b[0][0][j] = x; b[2][0][j] = x;
+						b[1][0][j] = y; b[3][0][j] = y;
+
+						b[0][1][j] = x-1; b[2][1][j] = x-1;
+						b[1][1][j] = y; b[3][1][j] = y;
+
+						b[0][2][j] = -2; b[2][2][j] = x;
+						b[1][2][j] = -2; b[3][2][j] = y-1;
+
+						push(voz, x, y);
+						push(top, x-1, y);
+						x -= 1;
+					}
+					else
+					{
+						cout << "t=" << t << endl;
+						for (int t1 = 0; t1 < 5; t1++) {
+							b[0][t1][t] = -1;
+							b[1][t1][t] = -1;
+						}
+						push(top, x, y-1);
+						y -= 1;
+					}
+				}
+				else {
+					if (x1 == x && y1 == y - 1) {
+						push(top, x - 1, y);
+						x -= 1;
+					}
+					else
+						if (x1 == x - 1 && y1 == y) {
+							push(top, x, y - 1);
+							y -= 1;
+						}
+				}
+			}
+			else
+			if (a[x][y + 1] == 0 && a[x - 1][y] != 0 && a[x][y - 1] == 0) {
+				k1++;
+				if (x == x0 && y == y0) {
+					bool f4 = 0;
+					int t = 0;
+					for (t = 0; t < n * m && !f4; t++)
+						if (b[0][0][t] == x && b[1][0][t] == y)
+							f4 = 1;
+					t--;
+					if (!f4) {
+						int j = n * m - 1;
+						bool f3 = 1;
+						while (f3 && j != 0) {
+							if (b[0][0][j] != -1) { f3 = 0; j++; }
+							else j--;
+						}
+						b[0][0][j] = x; b[2][0][j] = x;
+						b[1][0][j] = y; b[3][0][j] = y;
+
+						b[0][1][j] = x; b[2][1][j] = x;
+						b[1][1][j] = y+1; b[3][1][j] = y+1;
+
+						b[0][2][j] = -2; b[2][2][j] = x;
+						b[1][2][j] = -2; b[3][2][j] = y - 1;
+
+						push(voz, x, y);
+						push(top, x, y+1);
+						y += 1;
+					}
+					else
+					{
+						cout << "t=" << t << endl;
+						for (int t1 = 0; t1 < 5; t1++) {
+							b[0][t1][t] = -1;
+							b[1][t1][t] = -1;
+						}
+						push(top, x, y - 1);
+						y -= 1;
+					}
+				}
+				else {
+					if (x1 == x && y1 == y - 1) {
+						push(top, x, y+1);
+						y += 1;
+					}
+					else
+						if (x1 == x && y1 == y+1) {
+							push(top, x, y - 1);
+							y -= 1;
+						}
+					}
+				}
+
+			}
+			//ещё две части
+			else
+			/*
+				   ^////////
+				   |////////
+				 <-0////////
+				   |////////
+				   V////////
+			*/
+			if (x != 0 && x != n - 1 && y == m - 1) {
+				if (a[x][y - 1] != 0 && a[x + 1][y] != 0 && a[x - 1][y] != 0) {
+					f = 0;
+				}
+				else
+				if (a[x][y - 1] == 0 && a[x + 1][y] != 0 && a[x - 1][y] != 0) {
+					if (x1 != x || y1 != y - 1) {
+						k1++;
+						push(top, x, y - 1);
+						y -= 1;
+					}
+					else if (isEmpty(voz)) {
+						f = 0;
+					}
+					else {
+						f1 = 1;
+					}
+				}
+				else
+				if (a[x][y - 1] != 0 && a[x + 1][y] == 0 && a[x - 1][y] != 0) {
+					if (x1 != x+1 || y1 != y) {
+						k1++;
+						push(top, x+1, y );
+						x += 1;
+					}
+					else if (isEmpty(voz)) {
+						f = 0;
+					}
+					else {
+						f1 = 1;
+					}
+				}
+				else
+				if (a[x][y - 1] != 0 && a[x + 1][y] != 0 && a[x - 1][y] == 0) {
+					if (x1 != x-1 || y1 != y) {
+						k1++;
+						push(top, x-1, y);
+						x -= 1;
+					}
+					else if (isEmpty(voz)) {
+						f = 0;
+					}
+					else {
+						f1 = 1;
+					}
+				}
+				else
+				if (a[x][y - 1] == 0 && a[x + 1][y] == 0 && a[x - 1][y] != 0) {
+					k1++;
+					if (x==x0 && y==y0) {
+						bool f4 = 0;
+						int t = 0;
+						for (t = 0; t < n * m && !f4; t++)
+							if (b[0][0][t] == x && b[1][0][t] == y)
+								f4 = 1;
+						t--;
+						if (!f4) {
+							int j = n * m - 1;
+							bool f3 = 1;
+							while (f3 && j != 0) {
+								if (b[0][0][j] != -1) { f3 = 0; j++; }
+								else j--;
+							}
+							b[0][0][j] = x; b[2][0][j] = x;
+							b[1][0][j] = y; b[3][0][j] = y;
+
+							b[0][1][j] = x; b[2][1][j] = x;
+							b[1][1][j] = y - 1; b[3][1][j] = y - 1;
+
+							b[0][2][j] = -2; b[2][2][j] = x + 1;
+							b[1][2][j] = -2; b[3][2][j] = y;
+
+							push(voz, x, y);
+							push(top, x, y - 1);
+							y -= 1;
+						}
+						else
+						{
+							cout << "t=" << t << endl;
+							for (int t1 = 0; t1 < 5; t1++) {
+								b[0][t1][t] = -1;
+								b[1][t1][t] = -1;
+							}
+							push(top, x + 1, y);
+							x += 1;
+						}
+					}
+					else {
+						if (x1 == x && y1 == y - 1) {
+							push(top, x + 1, y);
+							x += 1;
+						}
+						else
+							if (x1 == x + 1 && y1 == y) {
+								push(top, x, y - 1);
+								y -= 1;
+							}
+						}
+				}
+				else
+				if (a[x][y - 1] != 0 && a[x + 1][y] == 0 && a[x - 1][y] == 0) {
+					k1++;
+					if (x == x0 && y == y0) {
+						bool f4 = 0;
+						int t = 0;
+						for (t = 0; t < n * m && !f4; t++)
+							if (b[0][0][t] == x && b[1][0][t] == y)
+								f4 = 1;
+						t--;
+						if (!f4) {
+							int j = n * m - 1;
+							bool f3 = 1;
+							while (f3 && j != 0) {
+								if (b[0][0][j] != -1) { f3 = 0; j++; }
+								else j--;
+							}
+							b[0][0][j] = x; b[2][0][j] = x;
+							b[1][0][j] = y; b[3][0][j] = y;
+
+							b[0][1][j] = x+1; b[2][1][j] = x+1;
+							b[1][1][j] = y; b[3][1][j] = y;
+
+							b[0][2][j] = -2; b[2][2][j] = x - 1;
+							b[1][2][j] = -2; b[3][2][j] = y;
+
+							push(voz, x, y);
+							push(top, x+1, y);
+							x += 1;
+						}
+						else
+						{
+							cout << "t=" << t << endl;
+							for (int t1 = 0; t1 < 5; t1++) {
+								b[0][t1][t] = -1;
+								b[1][t1][t] = -1;
+							}
+							push(top, x - 1, y);
+							x -= 1;
+						}
+					}
+					else {
+						if (x1 == x+1 && y1 == y) {
+							push(top, x - 1, y);
+							x -= 1;
+						}
+						else
+							if (x1 == x - 1 && y1 == y) {
+								push(top, x+1, y);
+								x += 1;
+							}
+					}
+
+				}
+				else
+				if (a[x][y - 1] == 0 && a[x + 1][y] != 0 && a[x - 1][y] == 0) {
+					k1++;
+					if (x == x0 && y == y0) {
+						bool f4 = 0;
+						int t = 0;
+						for (t = 0; t < n * m && !f4; t++)
+							if (b[0][0][t] == x && b[1][0][t] == y)
+								f4 = 1;
+						t--;
+						if (!f4) {
+							int j = n * m - 1;
+							bool f3 = 1;
+							while (f3 && j != 0) {
+								if (b[0][0][j] != -1) { f3 = 0; j++; }
+								else j--;
+							}
+							b[0][0][j] = x; b[2][0][j] = x;
+							b[1][0][j] = y; b[3][0][j] = y;
+
+							b[0][1][j] = x; b[2][1][j] = x;
+							b[1][1][j] = y-1; b[3][1][j] = y-1;
+
+							b[0][2][j] = -2; b[2][2][j] = x - 1;
+							b[1][2][j] = -2; b[3][2][j] = y;
+
+							push(voz, x, y);
+							push(top, x, y-1);
+							y -= 1;
+						}
+						else
+						{
+							cout << "t=" << t << endl;
+							for (int t1 = 0; t1 < 5; t1++) {
+								b[0][t1][t] = -1;
+								b[1][t1][t] = -1;
+							}
+							push(top, x - 1, y);
+							x -= 1;
+						}
+					}
+					else {
+						if (x1 == x && y1 == y-1) {
+							push(top, x - 1, y);
+							x -= 1;
+						}
+						else
+							if (x1 == x - 1 && y1 == y) {
+								push(top, x, y-1);
+								y -= 1;
+							}
+						}
+					}
+				else 
+				if (a[x][y - 1] == 0 && a[x + 1][y] == 0 && a[x - 1][y] == 0) {
+					k1++;
+					bool f4 = 0;
+					int t;
+					for (t = 0; t < n * m && !f4; t++)
+						if (b[0][0][t] == x && b[1][0][t] == y) f4 = 1;
+					int j = n * m - 1;
+					bool f3 = 1;
+					while (f3 && j != 0) {
+						if (b[0][0][j] != -1) { f3 = 0; j++; }
+						else j--;
+					}
+					if (x==x0 && y==y0) {
+						if (!f4) {
+
+							b[0][0][j] = x; b[2][0][j] = x;
+							b[1][0][j] = y; b[3][0][j] = y;
+
+							b[0][1][j] = x; b[2][1][j] = x;
+							b[1][1][j] = y - 1; b[3][1][j] = y - 1;
+
+							b[0][2][j] = -2; b[2][2][j] = x + 1;
+							b[1][2][j] = -2; b[3][2][j] = y;
+
+							b[0][3][j] = -2; b[2][3][j] = x-1;
+							b[1][3][j] = -2; b[3][3][j] = y;
+
+							push(voz, x, y);
+							push(top, x, y - 1);
+							y -= 1;
+						}
+						else
+						{
+							int k2 = 0;
+							for (int t2 = 0; t2 < 5; t2++) {
+								if (b[0][t2][t] == -2 && b[1][t2][t] == -2) {
+									k2++;
+								}
+							}
+							if (k2 == 1) {
+								for (int t1 = 0; t1 < 5; t1++) {
+									b[0][t1][t] = -1;
+									b[1][t1][t] = -1;
+								}
+								push(top, x-1, y);
+								x -= 1;
+							}
+							else {
+								push(voz, x, y);
+								push(top, x + 1, y);
+								b[0][2][j] = x + 1;
+								b[1][2][j] = y;
+								x += 1;
+							}
+						}
+					}
+					else {
+						if (x1 == x && y1 == y - 1) {
+							if (!f4) {
+								b[0][0][j] = x; b[2][0][j] = x;
+								b[1][0][j] = y; b[3][0][j] = y;
+
+								b[0][1][j] = x; b[2][1][j] = x;
+								b[1][1][j] = y - 1; b[3][1][j] = y - 1;
+
+								b[0][2][j] = x + 1; b[2][2][j] = x + 1;
+								b[1][2][j] = y; b[3][2][j] = y;
+
+								b[0][3][j] = -2; b[2][3][j] = x-1;
+								b[1][3][j] = -2; b[3][3][j] = y;
+
+								push(voz, x, y);
+								push(top, x + 1, y);
+								x += 1;
+							}
+							else {
+								for (int t1 = 0; t1 < 5; t1++) {
+									b[0][t1][t] = -1;
+									b[1][t1][t] = -1;
+								}
+								push(top, x-1, y);
+								x -= 1;
+							}
+						}
+						else
+							if (x1 == x + 1 && y1 == y) {
+								if (!f4) {
+									b[0][0][j] = x; b[2][0][j] = x;
+									b[1][0][j] = y; b[3][0][j] = y;
+
+									b[0][1][j] = x + 1; b[2][1][j] = x + 1;
+									b[1][1][j] = y; b[3][1][j] = y;
+
+									b[0][2][j] = x; b[2][2][j] = x;
+									b[1][2][j] = y - 1; b[3][2][j] = y - 1;
+
+									b[0][3][j] = -2; b[2][3][j] = x-1;
+									b[1][3][j] = -2; b[3][3][j] = y;
+
+									push(voz, x, y);
+									push(top, x, y - 1);
+									y -= 1;
+								}
+								else {
+									for (int t1 = 0; t1 < 5; t1++) {
+										b[0][t1][t] = -1;
+										b[1][t1][t] = -1;
+									}
+									push(top, x - 1, y);
+									x -= 1;
+								}
+							}
+							else
+								if (x1 == x-1 && y1 == y) {
+									if (!f4) {
+										b[0][0][j] = x; b[2][0][j] = x;
+										b[1][0][j] = y; b[3][0][j] = y;
+
+										b[0][1][j] = x-1; b[2][1][j] = x-1;
+										b[1][1][j] = y; b[3][1][j] = y;
+
+										b[0][2][j] = x; b[2][2][j] = x;
+										b[1][2][j] = y - 1; b[3][2][j] = y - 1;
+
+										b[0][3][j] = -2; b[2][3][j] = x + 1;
+										b[1][3][j] = -2; b[3][3][j] = y;
+
+										push(voz, x, y);
+										push(top, x, y - 1);
+										y -= 1;
+									}
+									else {
+										for (int t1 = 0; t1 < 5; t1++) {
+											b[0][t1][t] = -1;
+											b[1][t1][t] = -1;
+										}
+										push(top, x + 1, y);
+										x += 1;
+									}
+								}
+						}
+					}
+
+				}
+				else
+				/*
+					  ^
+					  |
+					<-0->
+					  |
+					  V
+			*/
+			if (x != 0 && x != n - 1 && y != 0 && y != m - 1) {
+				if (a[x][y + 1] != 0 && a[x + 1][y] != 0 && a[x][y - 1] != 0 && a[x - 1][y] != 0) {
+					f = 0;
+				}
+				else
+				if (a[x][y + 1] == 0 && a[x + 1][y] != 0 && a[x][y - 1] != 0 && a[x - 1][y] != 0) {
+					if (x1 != x || y1 != y + 1) {
+						k1++;
+						push(top, x, y + 1);
+						y += 1;
+					}
+					else if (isEmpty(voz)) {
+						f = 0;
+					}
+					else {
+						f1 = 1;
+					}
+				}
+				else
+				if (a[x][y + 1] != 0 && a[x + 1][y] == 0 && a[x][y - 1] != 0 && a[x - 1][y] != 0) {
+					if (x1 != x+1 || y1 != y) {
+						k1++;
+						push(top, x+1, y);
+						x += 1;
+					}
+					else if (isEmpty(voz)) {
+						f = 0;
+					}
+					else {
+						f1 = 1;
+					}
+				}
+				else
+				if (a[x][y + 1] != 0 && a[x + 1][y] != 0 && a[x][y - 1] == 0 && a[x - 1][y] != 0) {
+					if (x1 != x || y1 != y - 1) {
+						k1++;
+						push(top, x, y - 1);
+						y -= 1;
+					}
+					else if (isEmpty(voz)) {
+						f = 0;
+					}
+					else {
+						f1 = 1;
+					}
+				}
+				else
+				if (a[x][y + 1] != 0 && a[x + 1][y] != 0 && a[x][y - 1] != 0 && a[x - 1][y] == 0) {
+					if (x1 != x-1 || y1 != y) {
+						k1++;
+						push(top, x-1, y);
+						x -= 1;
+					}
+					else if (isEmpty(voz)) {
+						f = 0;
+					}
+					else {
+						f1 = 1;
+					}
+				}
+				else
+				if (a[x][y + 1] == 0 && a[x + 1][y] == 0 && a[x][y - 1] != 0 && a[x - 1][y] != 0){
+					k1++;
+					if (x == x0 && y == y0) {
+						bool f4 = 0;
+						int t = 0;
+						for (t = 0; t < n * m && !f4; t++)
+							if (b[0][0][t] == x && b[1][0][t] == y)
+								f4 = 1;
+						t--;
+						if (!f4) {
+							int j = n * m - 1;
+							bool f3 = 1;
+							while (f3 && j != 0) {
+								if (b[0][0][j] != -1) { f3 = 0; j++; }
+								else j--;
+							}
+							b[0][0][j] = x; b[2][0][j] = x;
+							b[1][0][j] = y; b[3][0][j] = y;
+
+							b[0][1][j] = x; b[2][1][j] = x;
+							b[1][1][j] = y + 1; b[3][1][j] = y + 1;
+
+							b[0][2][j] = -2; b[2][2][j] = x + 1;
+							b[1][2][j] = -2; b[3][2][j] = y;
+
+							push(voz, x, y);
+							push(top, x, y + 1);
+							y += 1;
+						}
+						else
+						{
+							cout << "t=" << t << endl;
+							for (int t1 = 0; t1 < 5; t1++) {
+								b[0][t1][t] = -1;
+								b[1][t1][t] = -1;
+							}
+							push(top, x + 1, y);
+							x += 1;
+						}
+					}
+					else {
+						if (x1 == x && y1 == y + 1) {
+							push(top, x + 1, y);
+							x += 1;
+						}
+						else
+							if (x1 == x + 1 && y1 == y) {
+								push(top, x, y + 1);
+								y += 1;
+							}
+					}
+				}
+				else
+				if (a[x][y + 1] == 0 && a[x + 1][y] != 0 && a[x][y - 1] == 0 && a[x - 1][y] != 0) {
+					k1++;
+					if (x == x0 && y == y0) {
+						bool f4 = 0;
+						int t = 0;
+						for (t = 0; t < n * m && !f4; t++)
+							if (b[0][0][t] == x && b[1][0][t] == y)
+								f4 = 1;
+						t--;
+						if (!f4) {
+							int j = n * m - 1;
+							bool f3 = 1;
+							while (f3 && j != 0) {
+								if (b[0][0][j] != -1) { f3 = 0; j++; }
+								else j--;
+							}
+							b[0][0][j] = x; b[2][0][j] = x;
+							b[1][0][j] = y; b[3][0][j] = y;
+
+							b[0][1][j] = x; b[2][1][j] = x;
+							b[1][1][j] = y + 1; b[3][1][j] = y + 1;
+
+							b[0][2][j] = -2; b[2][2][j] = x;
+							b[1][2][j] = -2; b[3][2][j] = y-1;
+
+							push(voz, x, y);
+							push(top, x, y + 1);
+							y += 1;
+						}
+						else
+						{
+							cout << "t=" << t << endl;
+							for (int t1 = 0; t1 < 5; t1++) {
+								b[0][t1][t] = -1;
+								b[1][t1][t] = -1;
+							}
+							push(top, x, y-1);
+							y -= 1;
+						}
+					}
+					else {
+						if (x1 == x && y1 == y + 1) {
+							push(top, x, y-1);
+							y -= 1;
+						}
+						else
+							if (x1 == x && y1 == y-1) {
+								push(top, x, y + 1);
+								y += 1;
+							}
+					}
+				}
+				else
+				if (a[x][y + 1] == 0 && a[x + 1][y] != 0 && a[x][y - 1] != 0 && a[x - 1][y] == 0) {
+					k1++;
+					if (x == x0 && y == y0) {
+						bool f4 = 0;
+						int t = 0;
+						for (t = 0; t < n * m && !f4; t++)
+							if (b[0][0][t] == x && b[1][0][t] == y)
+								f4 = 1;
+						t--;
+						if (!f4) {
+							int j = n * m - 1;
+							bool f3 = 1;
+							while (f3 && j != 0) {
+								if (b[0][0][j] != -1) { f3 = 0; j++; }
+								else j--;
+							}
+							b[0][0][j] = x; b[2][0][j] = x;
+							b[1][0][j] = y; b[3][0][j] = y;
+
+							b[0][1][j] = x; b[2][1][j] = x;
+							b[1][1][j] = y + 1; b[3][1][j] = y + 1;
+
+							b[0][2][j] = -2; b[2][2][j] = x-1;
+							b[1][2][j] = -2; b[3][2][j] = y;
+
+							push(voz, x, y);
+							push(top, x, y + 1);
+							y += 1;
+						}
+						else
+						{
+							cout << "t=" << t << endl;
+							for (int t1 = 0; t1 < 5; t1++) {
+								b[0][t1][t] = -1;
+								b[1][t1][t] = -1;
+							}
+							push(top, x-1, y);
+							x -= 1;
+						}
+					}
+					else {
+						if (x1 == x && y1 == y + 1) {
+							push(top, x-1, y);
+							x -= 1;
+						}
+						else
+							if (x1 == x-1 && y1 == y) {
+								push(top, x, y + 1);
+								y += 1;
+							}
+					}
+				}
+				else
+				if (a[x][y + 1] != 0 && a[x + 1][y] == 0 && a[x][y - 1] == 0 && a[x - 1][y] != 0) {
+					k1++;
+					if (x == x0 && y == y0) {
+						bool f4 = 0;
+						int t = 0;
+						for (t = 0; t < n * m && !f4; t++)
+							if (b[0][0][t] == x && b[1][0][t] == y)
+								f4 = 1;
+						t--;
+						if (!f4) {
+							int j = n * m - 1;
+							bool f3 = 1;
+							while (f3 && j != 0) {
+								if (b[0][0][j] != -1) { f3 = 0; j++; }
+								else j--;
+							}
+							b[0][0][j] = x; b[2][0][j] = x;
+							b[1][0][j] = y; b[3][0][j] = y;
+
+							b[0][1][j] = x+1; b[2][1][j] = x+1;
+							b[1][1][j] = y; b[3][1][j] = y;
+
+							b[0][2][j] = -2; b[2][2][j] = x;
+							b[1][2][j] = -2; b[3][2][j] = y-1;
+
+							push(voz, x, y);
+							push(top, x+1, y);
+							x += 1;
+						}
+						else
+						{
+							cout << "t=" << t << endl;
+							for (int t1 = 0; t1 < 5; t1++) {
+								b[0][t1][t] = -1;
+								b[1][t1][t] = -1;
+							}
+							push(top, x, y-1);
+							y -= 1;
+						}
+					}
+					else {
+						if (x1 == x && y1 == y - 1) {
+							push(top, x + 1, y);
+							x += 1;
+						}
+						else
+							if (x1 == x + 1 && y1 == y) {
+								push(top, x, y - 1);
+								y -= 1;
+							}
+					}
+				}
+				else
+				if (a[x][y + 1] != 0 && a[x + 1][y] == 0 && a[x][y - 1] != 0 && a[x - 1][y] == 0) {
+					k1++;
+					if (x == x0 && y == y0) {
+						bool f4 = 0;
+						int t = 0;
+						for (t = 0; t < n * m && !f4; t++)
+							if (b[0][0][t] == x && b[1][0][t] == y)
+								f4 = 1;
+						t--;
+						if (!f4) {
+							int j = n * m - 1;
+							bool f3 = 1;
+							while (f3 && j != 0) {
+								if (b[0][0][j] != -1) { f3 = 0; j++; }
+								else j--;
+							}
+							b[0][0][j] = x; b[2][0][j] = x;
+							b[1][0][j] = y; b[3][0][j] = y;
+
+							b[0][1][j] = x + 1; b[2][1][j] = x + 1;
+							b[1][1][j] = y; b[3][1][j] = y;
+
+							b[0][2][j] = -2; b[2][2][j] = x-1;
+							b[1][2][j] = -2; b[3][2][j] = y;
+
+							push(voz, x, y);
+							push(top, x + 1, y);
+							x += 1;
+						}
+						else
+						{
+							cout << "t=" << t << endl;
+							for (int t1 = 0; t1 < 5; t1++) {
+								b[0][t1][t] = -1;
+								b[1][t1][t] = -1;
+							}
+							push(top, x-1, y);
+							x -= 1;
+						}
+					}
+					else {
+						if (x1 == x-1 && y1 == y) {
+							push(top, x + 1, y);
+							x += 1;
+						}
+						else
+							if (x1 == x + 1 && y1 == y) {
+								push(top, x-1, y);
+								x -= 1;
+							}
+					}
+				}
+				else
+				if (a[x][y + 1] != 0 && a[x + 1][y] != 0 && a[x][y - 1] == 0 && a[x - 1][y] == 0) {
+					k1++;
+					if (x == x0 && y == y0) {
+						bool f4 = 0;
+						int t = 0;
+						for (t = 0; t < n * m && !f4; t++)
+							if (b[0][0][t] == x && b[1][0][t] == y)
+								f4 = 1;
+						t--;
+						if (!f4) {
+							int j = n * m - 1;
+							bool f3 = 1;
+							while (f3 && j != 0) {
+								if (b[0][0][j] != -1) { f3 = 0; j++; }
+								else j--;
+							}
+							b[0][0][j] = x; b[2][0][j] = x;
+							b[1][0][j] = y; b[3][0][j] = y;
+
+							b[0][1][j] = x + 1; b[2][1][j] = x;
+							b[1][1][j] = y; b[3][1][j] = y-1;
+
+							b[0][2][j] = -2; b[2][2][j] = x - 1;
+							b[1][2][j] = -2; b[3][2][j] = y;
+
+							push(voz, x, y);
+							push(top, x, y-1);
+							y -= 1;
+						}
+						else
+						{
+							cout << "t=" << t << endl;
+							for (int t1 = 0; t1 < 5; t1++) {
+								b[0][t1][t] = -1;
+								b[1][t1][t] = -1;
+							}
+							push(top, x - 1, y);
+							x -= 1;
+						}
+					}
+					else {
+						if (x1 == x - 1 && y1 == y) {
+							push(top, x, y-1);
+							y -= 1;
+						}
+						else
+							if (x1 == x && y1 == y-1) {
+								push(top, x - 1, y);
+								x -= 1;
+							}
+					}
+				}
+				else
+				if (a[x][y + 1] != 0 && a[x + 1][y] == 0 && a[x][y - 1] == 0 && a[x - 1][y] == 0) {
+					k1++;
+					bool f4 = 0;
+					int t;
+					for (t = 0; t < n * m && !f4; t++)
+						if (b[0][0][t] == x && b[1][0][t] == y) f4 = 1;
+					int j = n * m - 1;
+					bool f3 = 1;
+					while (f3 && j != 0) {
+						if (b[0][0][j] != -1) { f3 = 0; j++; }
+						else j--;
+					}
+					if (x == x0 && y == y0) {
+						if (!f4) {
+
+							b[0][0][j] = x; b[2][0][j] = x;
+							b[1][0][j] = y; b[3][0][j] = y;
+
+							b[0][1][j] = x; b[2][1][j] = x;
+							b[1][1][j] = y - 1; b[3][1][j] = y - 1;
+
+							b[0][2][j] = -2; b[2][2][j] = x + 1;
+							b[1][2][j] = -2; b[3][2][j] = y;
+
+							b[0][3][j] = -2; b[2][3][j] = x - 1;
+							b[1][3][j] = -2; b[3][3][j] = y;
+
+							push(voz, x, y);
+							push(top, x, y - 1);
+							y -= 1;
+						}
+						else
+						{
+							int k2 = 0;
+							for (int t2 = 0; t2 < 5; t2++) {
+								if (b[0][t2][t] == -2 && b[1][t2][t] == -2) {
+									k2++;
+								}
+							}
+							if (k2 == 1) {
+								for (int t1 = 0; t1 < 5; t1++) {
+									b[0][t1][t] = -1;
+									b[1][t1][t] = -1;
+								}
+								push(top, x - 1, y);
+								x -= 1;
+							}
+							else {
+								push(voz, x, y);
+								push(top, x + 1, y);
+								b[0][2][j] = x + 1;
+								b[1][2][j] = y;
+								x += 1;
+							}
+						}
+					}
+					else {
+						if (x1 == x && y1 == y - 1) {
+							if (!f4) {
+								b[0][0][j] = x; b[2][0][j] = x;
+								b[1][0][j] = y; b[3][0][j] = y;
+
+								b[0][1][j] = x; b[2][1][j] = x;
+								b[1][1][j] = y - 1; b[3][1][j] = y - 1;
+
+								b[0][2][j] = x + 1; b[2][2][j] = x + 1;
+								b[1][2][j] = y; b[3][2][j] = y;
+
+								b[0][3][j] = -2; b[2][3][j] = x - 1;
+								b[1][3][j] = -2; b[3][3][j] = y;
+
+								push(voz, x, y);
+								push(top, x + 1, y);
+								x += 1;
+							}
+							else {
+								for (int t1 = 0; t1 < 5; t1++) {
+									b[0][t1][t] = -1;
+									b[1][t1][t] = -1;
+								}
+								push(top, x - 1, y);
+								x -= 1;
+							}
+						}
+						else
+							if (x1 == x + 1 && y1 == y) {
+								if (!f4) {
+									b[0][0][j] = x; b[2][0][j] = x;
+									b[1][0][j] = y; b[3][0][j] = y;
+
+									b[0][1][j] = x + 1; b[2][1][j] = x + 1;
+									b[1][1][j] = y; b[3][1][j] = y;
+
+									b[0][2][j] = x; b[2][2][j] = x;
+									b[1][2][j] = y - 1; b[3][2][j] = y - 1;
+
+									b[0][3][j] = -2; b[2][3][j] = x - 1;
+									b[1][3][j] = -2; b[3][3][j] = y;
+
+									push(voz, x, y);
+									push(top, x, y - 1);
+									y -= 1;
+								}
+								else {
+									for (int t1 = 0; t1 < 5; t1++) {
+										b[0][t1][t] = -1;
+										b[1][t1][t] = -1;
+									}
+									push(top, x - 1, y);
+									x -= 1;
+								}
+							}
+							else
+								if (x1 == x - 1 && y1 == y) {
+									if (!f4) {
+										b[0][0][j] = x; b[2][0][j] = x;
+										b[1][0][j] = y; b[3][0][j] = y;
+
+										b[0][1][j] = x - 1; b[2][1][j] = x - 1;
+										b[1][1][j] = y; b[3][1][j] = y;
+
+										b[0][2][j] = x; b[2][2][j] = x;
+										b[1][2][j] = y - 1; b[3][2][j] = y - 1;
+
+										b[0][3][j] = -2; b[2][3][j] = x + 1;
+										b[1][3][j] = -2; b[3][3][j] = y;
+
+										push(voz, x, y);
+										push(top, x, y - 1);
+										y -= 1;
+									}
+									else {
+										for (int t1 = 0; t1 < 5; t1++) {
+											b[0][t1][t] = -1;
+											b[1][t1][t] = -1;
+										}
+										push(top, x + 1, y);
+										x += 1;
+									}
+								}
+					}
+				}
+				else
+				if (a[x][y + 1] == 0 && a[x + 1][y] != 0 && a[x][y - 1] == 0 && a[x - 1][y] == 0) {
+					k1++;
+					bool f4 = 0;
+					int t;
+					for (t = 0; t < n * m && !f4; t++)
+						if (b[0][0][t] == x && b[1][0][t] == y) f4 = 1;
+					int j = n * m - 1;
+					bool f3 = 1;
+					while (f3 && j != 0) {
+						if (b[0][0][j] != -1) { f3 = 0; j++; }
+						else j--;
+					}
+					if (x == x0 && y == y0) {
+						if (!f4) {
+
+							b[0][0][j] = x; b[2][0][j] = x;
+							b[1][0][j] = y; b[3][0][j] = y;
+
+							b[0][1][j] = x; b[2][1][j] = x;
+							b[1][1][j] = y + 1; b[3][1][j] = y + 1;
+
+							b[0][2][j] = -2; b[2][2][j] = x - 1;
+							b[1][2][j] = -2; b[3][2][j] = y;
+
+							b[0][3][j] = -2; b[2][3][j] = x;
+							b[1][3][j] = -2; b[3][3][j] = y - 1;
+
+							push(voz, x, y);
+							push(top, x, y + 1);
+							y += 1;
+
+						}
+						else
+						{
+							int k2 = 0;
+							for (int t2 = 0; t2 < 5; t2++) {
+								if (b[0][t2][t] == -2 && b[1][t2][t] == -2) {
+									k2++;
+								}
+							}
+							if (k2 == 1) {
+								for (int t1 = 0; t1 < 5; t1++) {
+									b[0][t1][t] = -1;
+									b[1][t1][t] = -1;
+								}
+								push(top, x, y - 1);
+								y -= 1;
+							}
+							else {
+								push(voz, x, y);
+								push(top, x - 1, y);
+								b[0][2][j] = x - 1;
+								b[1][2][j] = y;
+								x -= 1;
+							}
+						}
+					}
+					else {
+						if (x1 == x && y1 == y + 1) {
+							if (!f4) {
+								b[0][0][j] = x; b[2][0][j] = x;
+								b[1][0][j] = y; b[3][0][j] = y;
+
+								b[0][1][j] = x; b[2][1][j] = x;
+								b[1][1][j] = y + 1; b[3][1][j] = y + 1;
+
+								b[0][2][j] = x - 1; b[2][2][j] = x - 1;
+								b[1][2][j] = y; b[3][2][j] = y;
+
+								b[0][3][j] = -2; b[2][3][j] = x;
+								b[1][3][j] = -2; b[3][3][j] = y - 1;
+
+								push(voz, x, y);
+								push(top, x - 1, y);
+								x -= 1;
+							}
+							else {
+								for (int t1 = 0; t1 < 5; t1++) {
+									b[0][t1][t] = -1;
+									b[1][t1][t] = -1;
+								}
+								push(top, x, y - 1);
+								y -= 1;
+							}
+						}
+						else
+							if (x1 == x - 1 && y1 == y) {
+								if (!f4) {
+									b[0][0][j] = x; b[2][0][j] = x;
+									b[1][0][j] = y; b[3][0][j] = y;
+
+									b[0][1][j] = x - 1; b[2][1][j] = x - 1;
+									b[1][1][j] = y; b[3][1][j] = y;
+
+									b[0][2][j] = x; b[2][2][j] = x;
+									b[1][2][j] = y + 1; b[3][2][j] = y + 1;
+
+									b[0][3][j] = -2; b[2][3][j] = x;
+									b[1][3][j] = -2; b[3][3][j] = y - 1;
+									push(voz, x, y);
+									push(top, x, y + 1);
+									y += 1;
+								}
+								else {
+									for (int t1 = 0; t1 < 5; t1++) {
+										b[0][t1][t] = -1;
+										b[1][t1][t] = -1;
+									}
+									push(top, x, y - 1);
+									y -= 1;
+								}
+							}
+							else
+								if (x1 == x && y1 == y - 1) {
+									if (!f4) {
+										b[0][0][j] = x; b[2][0][j] = x;
+										b[1][0][j] = y; b[3][0][j] = y;
+
+										b[0][1][j] = x; b[2][1][j] = x;
+										b[1][1][j] = y - 1; b[3][1][j] = y - 1;
+
+										b[0][2][j] = x; b[2][2][j] = x;
+										b[1][2][j] = y + 1; b[3][2][j] = y + 1;
+
+										b[0][3][j] = -2; b[2][3][j] = x - 1;
+										b[1][3][j] = -2; b[3][3][j] = y;
+										push(voz, x, y);
+										push(top, x, y + 1);
+										y += 1;
+									}
+									else {
+										for (int t1 = 0; t1 < 5; t1++) {
+											b[0][t1][t] = -1;
+											b[1][t1][t] = -1;
+										}
+										push(top, x - 1, y);
+										x -= 1;
+									}
+								}
+					}
+				}
+				else
+				if (a[x][y + 1] == 0 && a[x + 1][y] == 0 && a[x][y - 1] != 0 && a[x - 1][y] == 0) {
+					k1++;
+					bool f4 = 0;
+					int t;
+					for (t = 0; t < n * m && !f4; t++)
+						if (b[0][0][t] == x && b[1][0][t] == y) f4 = 1;
+					int j = n * m - 1;
+					bool f3 = 1;
+					while (f3 && j != 0) {
+						if (b[0][0][j] != -1) { f3 = 0; j++; }
+						else j--;
+					}
+					if (x == x0 && y == y0) {
+						if (!f4) {
+
+							b[0][0][j] = x; b[2][0][j] = x;
+							b[1][0][j] = y; b[3][0][j] = y;
+
+							b[0][1][j] = x; b[2][1][j] = x;
+							b[1][1][j] = y + 1; b[3][1][j] = y + 1;
+
+							b[0][2][j] = -2; b[2][2][j] = x + 1;
+							b[1][2][j] = -2; b[3][2][j] = y;
+
+							b[0][3][j] = -2; b[2][3][j] = x - 1;
+							b[1][3][j] = -2; b[3][3][j] = y;
+
+							push(voz, x, y);
+
+							push(top, x, y + 1);
+							y += 1;
+
+						}
+						else
+						{
+							int k2 = 0;
+							for (int t2 = 0; t2 < 5; t2++) {
+								if (b[0][t2][t] == -2 && b[1][t2][t] == -2) {
+									k2++;
+								}
+							}
+							if (k2 == 1) {
+								for (int t1 = 0; t1 < 5; t1++) {
+									b[0][t1][t] = -1;
+									b[1][t1][t] = -1;
+								}
+								push(top, x - 1, y);
+								x -= 1;
+							}
+							else {
+								push(voz, x, y);
+								push(top, x + 1, y);
+								b[0][2][j] = x + 1;
+								b[1][2][j] = y;
+								x += 1;
+							}
+						}
+					}
+					else {
+						if (x1 == x && y1 == y + 1) {
+							if (!f4) {
+								b[0][0][j] = x; b[2][0][j] = x;
+								b[1][0][j] = y; b[3][0][j] = y;
+
+								b[0][1][j] = x; b[2][1][j] = x;
+								b[1][1][j] = y + 1; b[3][1][j] = y + 1;
+
+								b[0][2][j] = x - 1; b[2][2][j] = x - 1;
+								b[1][2][j] = y; b[3][2][j] = y;
+
+								b[0][3][j] = -2; b[2][3][j] = x + 1;
+								b[1][3][j] = -2; b[3][3][j] = y;
+
+								push(voz, x, y);
+								push(top, x - 1, y);
+								x -= 1;
+							}
+							else {
+								for (int t1 = 0; t1 < 5; t1++) {
+									b[0][t1][t] = -1;
+									b[1][t1][t] = -1;
+								}
+								push(top, x + 1, y);
+								x += 1;
+							}
+						}
+						else
+							if (x1 == x - 1 && y1 == y) {
+								if (!f4) {
+									b[0][0][j] = x; b[2][0][j] = x;
+									b[1][0][j] = y; b[3][0][j] = y;
+
+									b[0][1][j] = x - 1; b[2][1][j] = x - 1;
+									b[1][1][j] = y; b[3][1][j] = y;
+
+									b[0][2][j] = x; b[2][2][j] = x;
+									b[1][2][j] = y + 1; b[3][2][j] = y + 1;
+
+									b[0][3][j] = -2; b[2][3][j] = x + 1;
+									b[1][3][j] = -2; b[3][3][j] = y;
+
+									push(voz, x, y);
+									push(top, x, y + 1);
+									y += 1;
+								}
+								else {
+									for (int t1 = 0; t1 < 5; t1++) {
+										b[0][t1][t] = -1;
+										b[1][t1][t] = -1;
+									}
+									push(top, x + 1, y);
+									x += 1;
+								}
+							}
+							else
+								if (x1 == x + 1 && y1 == y) {
+									if (!f4) {
+										b[0][0][j] = x; b[2][0][j] = x;
+										b[1][0][j] = y; b[3][0][j] = y;
+
+										b[0][1][j] = x + 1; b[2][1][j] = x + 1;
+										b[1][1][j] = y; b[3][1][j] = y;
+
+										b[0][2][j] = x; b[2][2][j] = x;
+										b[1][2][j] = y + 1; b[3][2][j] = y + 1;
+
+										b[0][3][j] = -2; b[2][3][j] = x - 1;
+										b[1][3][j] = -2; b[3][3][j] = y;
+
+										push(voz, x, y);
+										push(top, x, y + 1);
+										y += 1;
+									}
+									else {
+										for (int t1 = 0; t1 < 5; t1++) {
+											b[0][t1][t] = -1;
+											b[1][t1][t] = -1;
+										}
+										push(top, x - 1, y);
+										x -= 1;
+									}
+								}
+					}
+				}
+				else
+				if (a[x][y + 1] == 0 && a[x + 1][y] == 0 && a[x][y - 1] == 0 && a[x - 1][y] != 0) {
+					k1++;
+					bool f4 = 0;
+					int t = 0;
+					for (t = 0; t < n * m && !f4; t++)
+						if (b[0][0][t] == x && b[1][0][t] == y) f4 = 1;
+					t--;
+					int j = n * m - 1;
+					bool f3 = 1;
+					while (f3 && j != 0) {
+						if (b[0][0][j] != -1) { f3 = 0; j++; }
+						else j--;
+					}
+					if (x == x0 && y == y0) {
+						if (!f4) {
+
+							b[0][0][j] = x; b[2][0][j] = x;
+							b[1][0][j] = y; b[3][0][j] = y;
+
+							b[0][1][j] = x; b[2][1][j] = x;
+							b[1][1][j] = y + 1; b[3][1][j] = y + 1;
+
+							b[0][2][j] = -2; b[2][2][j] = x + 1;
+							b[1][2][j] = -2; b[3][2][j] = y;
+
+							b[0][3][j] = -2; b[2][3][j] = x;
+							b[1][3][j] = -2; b[3][3][j] = y - 1;
+
+							push(voz, x, y);
+							push(top, x, y + 1);
+							y += 1;
+						}
+						else
+						{
+							int k2 = 0;
+							for (int t2 = 0; t2 < 5; t2++) {
+								if (b[0][t2][t] == -2 && b[1][t2][t] == -2) {
+									k2++;
+								}
+							}
+							if (k2 == 1) {
+								for (int t1 = 0; t1 < 5; t1++) {
+									b[0][t1][t] = -1;
+									b[1][t1][t] = -1;
+								}
+								push(top, x, y - 1);
+								y -= 1;
+							}
+							else {
+								push(voz, x, y);
+								push(top, x + 1, y);
+								b[0][2][j] = x + 1;
+								b[1][2][j] = y;
+								x += 1;
+							}
+						}
+					}
+					else {
+
+						if (x1 == x && y1 == y - 1) {
+							if (!f4) {
+								b[0][0][j] = x; b[2][0][j] = x;
+								b[1][0][j] = y; b[3][0][j] = y;
+
+								b[0][1][j] = x; b[2][1][j] = x;
+								b[1][1][j] = y - 1; b[3][1][j] = y - 1;
+
+								b[0][2][j] = x + 1; b[2][2][j] = x + 1;
+								b[1][2][j] = y; b[3][2][j] = y;
+
+								b[0][3][j] = -2; b[2][3][j] = x;
+								b[1][3][j] = -2; b[3][3][j] = y + 1;
+								push(voz, x, y);
+
+								push(top, x + 1, y);
+								x += 1;
+							}
+							else {
+								for (int t1 = 0; t1 < 5; t1++) {
+									b[0][t1][t] = -1;
+									b[1][t1][t] = -1;
+								}
+								push(top, x, y + 1);
+								y += 1;
+							}
+						}
+						else
+							if (x1 == x + 1 && y1 == y) {
+								if (!f4) {
+									b[0][0][j] = x; b[2][0][j] = x;
+									b[1][0][j] = y; b[3][0][j] = y;
+
+									b[0][1][j] = x + 1; b[2][1][j] = x + 1;
+									b[1][1][j] = y; b[3][1][j] = y;
+
+									b[0][2][j] = x; b[2][2][j] = x;
+									b[1][2][j] = y - 1; b[3][2][j] = y - 1;
+
+									b[0][3][j] = -2; b[2][3][j] = x;
+									b[1][3][j] = -2; b[3][3][j] = y + 1;
+									push(voz, x, y);
+
+									push(top, x, y - 1);
+									y -= 1;
+								}
+								else {
+									for (int t1 = 0; t1 < 5; t1++) {
+										b[0][t1][t] = -1;
+										b[1][t1][t] = -1;
+									}
+									push(top, x, y + 1);
+									y += 1;
+								}
+							}
+							else
+								if (x1 == x && y1 == y + 1) {
+									if (!f4) {
+										b[0][0][j] = x; b[2][0][j] = x;
+										b[1][0][j] = y; b[3][0][j] = y;
+
+										b[0][1][j] = x; b[2][1][j] = x;
+										b[1][1][j] = y + 1; b[3][1][j] = y + 1;
+
+										b[0][2][j] = x; b[2][2][j] = x;
+										b[1][2][j] = y - 1; b[3][2][j] = y - 1;
+
+										b[0][3][j] = -2; b[2][3][j] = x + 1;
+										b[1][3][j] = -2; b[3][3][j] = y;
+										push(voz, x, y);
+
+										push(top, x, y - 1);
+										y -= 1;
+									}
+									else {
+										for (int t1 = 0; t1 < 5; t1++) {
+											b[0][t1][t] = -1;
+											b[1][t1][t] = -1;
+										}
+										push(top, x + 1, y);
+										x += 1;
+									}
+								}
+					}
+				}
+				else
+				if (a[x][y + 1] == 0 && a[x + 1][y] == 0 && a[x][y - 1] == 0 && a[x - 1][y] == 0) {
+					k1++;
+					bool f4 = 0;
+					int t = 0;
+					for (t = 0; t < n * m && !f4; t++)
+						if (b[0][0][t] == x && b[1][0][t] == y) f4 = 1;
+					t--;
+					int j = n * m - 1;
+					bool f3 = 1;
+					while (f3 && j != 0) {
+						if (b[0][0][j] != -1) { f3 = 0; j++; }
+						else j--;
+					}
+					if (x == x0 && y == y0) {
+						if (!f4) {
+							b[0][0][j] = x; b[2][0][j] = x;
+							b[1][0][j] = y; b[3][0][j] = y;
+
+							b[0][1][j] = x; b[2][1][j] = x;
+							b[1][1][j] = y + 1; b[3][1][j] = y + 1;
+
+							b[0][2][j] = -2; b[2][2][j] = x + 1;
+							b[1][2][j] = -2; b[3][2][j] = y;
+
+							b[0][3][j] = -2; b[2][3][j] = x;
+							b[1][3][j] = -2; b[3][3][j] = y - 1;
+
+							b[0][4][j] = -2; b[2][4][j] = x - 1;
+							b[1][4][j] = -2; b[3][4][j] = y;
+
+							push(voz, x, y);
+							push(top, x, y + 1);
+							y += 1;
+						}
+						else
+						{
+							int k2 = 0;
+							for (int t2 = 0; t2 < 5; t2++) {
+								if (b[0][t2][t] == -2 && b[1][t2][t] == -2) {
+									k2++;
+								}
+							}
+							if (k2 == 1) {
+								for (int t1 = 0; t1 < 5; t1++) {
+									b[0][t1][t] = -1;
+									b[1][t1][t] = -1;
+								}
+								push(top, x - 1, y);
+								x -= 1;
+							}
+							else
+								if (k2 == 2) {
+									push(voz, x, y);
+									push(top, x, y - 1);
+									b[0][2][j] = x;
+									b[1][2][j] = y - 1;
+									y -= 1;
+								}
+								else
+									if (k2 == 3) {
+										push(voz, x, y);
+										push(top, x + 1, y);
+										b[0][2][j] = x + 1;
+										b[1][2][j] = y;
+										x += 1;
+									}
+						}
+					}
+					else
+					{
+						if (x1 == x && y1 == y + 1) {
+							if (!f4) {
+
+								b[0][0][j] = x; b[2][0][j] = x;
+								b[1][0][j] = y; b[3][0][j] = y;
+
+								b[0][1][j] = x; b[2][1][j] = x;
+								b[1][1][j] = y + 1; b[3][1][j] = y + 1;
+
+								b[0][2][j] = x + 1; b[2][2][j] = x + 1;
+								b[1][2][j] = y; b[3][2][j] = y;
+
+								b[0][3][j] = -2; b[2][3][j] = x;
+								b[1][3][j] = -2; b[3][3][j] = y - 1;
+
+								b[0][4][j] = -2; b[2][4][j] = x - 1;
+								b[1][4][j] = -2; b[3][4][j] = y;
+
+								push(voz, x, y);
+								push(top, x, y + 1);
+								y += 1;
+							}
+							else
+							{
+								int k2 = 0;
+								for (int t2 = 0; t2 < 5; t2++) {
+									if (b[0][t2][t] == -2 && b[1][t2][t] == -2) {
+										k2++;
+									}
+								}
+								if (k2 == 1) {
+									for (int t1 = 0; t1 < 5; t1++) {
+										b[0][t1][t] = -1;
+										b[1][t1][t] = -1;
+									}
+									push(top, x, y - 1);
+									y -= 1;
+								}
+								else {
+									push(voz, x, y);
+									push(top, x + 1, y);
+									b[0][2][j] = x + 1;
+									b[1][2][j] = y;
+									x += 1;
+								}
+							}
+						}
+					}
+				}
+
+			}
 
 
 		}
